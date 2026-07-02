@@ -148,7 +148,7 @@ function initCharts() {
 // --- 4. DATA LOADER & SETUP ENGINE ---
 initCharts();
 
-fetch('./dashboard_ready.json')
+fetch('/dashboard_ready.json')
   .then(res => res.json())
   .then(data => {
     paperData = data;
