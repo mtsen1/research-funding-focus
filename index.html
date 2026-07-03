@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>R&D Landscape Explorer</title>
+    <style>
+      :root {
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(226, 232, 240, 0.8);
+        --text-primary: #1e293b;
+        --text-muted: #64748b;
+      }
+      
+      body { margin: 0; overflow: hidden; background-color: #f8fafc; font-family: -apple-system, system-ui, sans-serif; color: var(--text-primary); }
+      canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+      
+      /* Main Grid Layout Container - Calibrated for high scannability */
+      #dashboard-container {
+        position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+        display: grid; 
+        grid-template-columns: 280px 1fr 320px; /* Rigid docks protect chart scale dimensions */
+        padding: 15px; box-sizing: border-box; pointer-events: none; z-index: 10;
+        gap: 15px;
+      }
+      
+      /* Shared Glass Panel Styles */
+      .glass-panel {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 16px;
+        box-sizing: border-box;
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 20px 0 rgba(148, 163, 184, 0.15);
+      }
+      
+      /* Webkit Scrollbar Customization for Glass Aesthetics */
+      .glass-panel::-webkit-scrollbar { width: 4px; }
+      .glass-panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+      
+      /* Title Formatting Hierarchy */
+      h1 { margin: 0 0 16px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.03em; color: #0f172a; border-bottom: 2px solid #2563eb; padding-bottom: 8px; }
+      h2, h3 { margin: 0 0 12px 0; font-size: 0.95rem; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; border-bottom: 1px solid var(--glass-border); padding-bottom: 6px; }
+      
+      /* Left Dock Styles - Made Scroll-Safe on laptops */
+      #left-dock { 
+        grid-column: 1; 
+        gap: 16px; 
+        overflow-y: auto; 
+        max-height: calc(100vh - 30px); 
+      }
+      #search-input {
+        width: 100%; padding: 10px; background: rgba(241, 245, 249, 0.8);
+        border: 1px solid #cbd5e1; color: var(--text-primary); border-radius: 6px; box-sizing: border-box;
+      }
+      #search-input::placeholder { color: #94a3b8; }
+      .filter-group { display: flex; flex-direction: column; gap: 8px; }
+      .filter-label { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: #334155; }
+      
+      /* Chart Sizing Optimization */
+      .chart-container-small { height: 160px; position: relative; width: 100%; margin-top: 5px; }
+      .chart-container-med { height: 180px; position: relative; width: 100%; }
+      
+      /* Center Area Placeholder for Layout Alignment */
+      #center-spacer { grid-column: 2; pointer-events: none; }
+      
+      /* Right Dock Styles (Scroll-Safe) */
+      #right-dock { 
+        grid-column: 3; 
+        gap: 20px; 
+        overflow-y: auto; 
+        max-height: calc(100vh - 30px); 
+      }
+      
+      /* Summary Card Metrics Readouts */
+      .metric-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; gap: 10px; }
+      .metric-value { font-weight: bold; color: #2563eb; text-align: right; white-space: nowrap; }
+      
+      /* Raycaster Tooltip Element */
+      #tooltip {
+        position: absolute; top: -1000px; left: 0; background: rgba(255, 255, 255, 0.98);
+        padding: 12px; border-radius: 8px; border: 1px solid #2563eb; pointer-events: none;
+        max-width: 260px; z-index: 100; display: none; box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.3);
+        color: var(--text-primary);
+      }
+      #tooltip-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; line-height: 1.3; }
+      #tooltip-concepts { font-size: 0.75rem; color: var(--text-muted); }
+      
+      /* Academic Footer */
+      #citation-footer {
+        position: absolute; bottom: 20px; left: 310px; width: calc(100% - 640px);
+        background: var(--glass-bg); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        border: 1px solid var(--glass-border); padding: 12px 20px; border-radius: 8px;
+        text-align: center; pointer-events: none; z-index: 15; opacity: 0; transition: opacity 0.2s ease;
+        box-shadow: 0 4px 20px 0 rgba(148, 163, 184, 0.1);
+      }
+      #citation-text { font-size: 0.9rem; font-weight: 500; color: #334155; line-height: 1.4; }
+    </style>
+    <script type="module" crossorigin src="/research-funding-focus/assets/index-BDTl6Ifl.js"></script>
+  </head>
+  <body>
+    <div id="tooltip">
+      <div id="tooltip-title"></div>
+      <div id="tooltip-concepts"></div>
+    </div>
+    
+    <div id="citation-footer">
+      <div id="citation-text"></div>
+    </div>
+
+    <div id="dashboard-container">
+      
+      <div id="left-dock" class="glass-panel">
+        <h1>R&D Landscape Explorer</h1>
+        
+        <h2>Controls</h2>
+        <input type="text" id="search-input" placeholder="Search topics or concepts..." />
+        
+        <div class="filter-group">
+          <label class="filter-label" style="font-weight: 600;"><input type="checkbox" id="parent-public" checked /> Public Sector</label>
+          <div id="children-public" style="margin-left: 15px; display: flex; flex-direction: column; gap: 6px;"></div>
+          
+          <label class="filter-label" style="font-weight: 600; margin-top: 5px;"><input type="checkbox" id="parent-industry" checked /> Industry Sector</label>
+          <div id="children-industry" style="margin-left: 15px; display: flex; flex-direction: column; gap: 6px;"></div>
+        </div>
+        
+        <h3>Funder Impact</h3>
+        <div class="chart-container-small">
+          <canvas id="chart-bubble-impact"></canvas>
+        </div>
+      </div>
+      
+      <div id="center-spacer"></div>
+      
+      <div id="right-dock" class="glass-panel">
+        <div>
+          <h2>Active Footprint</h2>
+          <div id="health-card">
+            <div class="metric-row"><span>Total Volume:</span><span id="metric-volume" class="metric-value">-</span></div>
+            <div class="metric-row"><span>Avg Citations:</span><span id="metric-citations" class="metric-value">-</span></div>
+            <div class="metric-row"><span>Public / Private Ratio:</span><span id="metric-ratio" class="metric-value">-</span></div>
+          </div>
+        </div>
+        
+        <div>
+          <h3>Topic Satiation</h3>
+          <div class="chart-container-med">
+            <canvas id="chart-bar-satiation"></canvas>
+          </div>
+        </div>
+        
+        <div>
+          <h3>Macro Shift Timeline</h3>
+          <div class="chart-container-med">
+            <canvas id="chart-line-timeline"></canvas>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+  </body>
+</html>
