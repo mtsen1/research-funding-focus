@@ -6,12 +6,13 @@
     <title>R&D Landscape Explorer</title>
     <style>
       :root {
-        --glass-bg: rgba(15, 23, 42, 0.65);
-        --glass-border: rgba(51, 65, 85, 0.5);
-        --text-muted: #94a3b8;
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(226, 232, 240, 0.8);
+        --text-primary: #1e293b;
+        --text-muted: #64748b;
       }
       
-      body { margin: 0; overflow: hidden; background-color: #0f172a; font-family: -apple-system, system-ui, sans-serif; color: #e2e8f0; }
+      body { margin: 0; overflow: hidden; background-color: #f8fafc; font-family: -apple-system, system-ui, sans-serif; color: var(--text-primary); }
       canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
       
       /* Main Grid Layout Container - Calibrated for high scannability */
@@ -35,16 +36,16 @@
         pointer-events: auto;
         display: flex;
         flex-direction: column;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        box-shadow: 0 4px 20px 0 rgba(148, 163, 184, 0.15);
       }
       
       /* Webkit Scrollbar Customization for Glass Aesthetics */
       .glass-panel::-webkit-scrollbar { width: 4px; }
-      .glass-panel::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+      .glass-panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
       
       /* Title Formatting Hierarchy */
-      h1 { margin: 0 0 16px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.03em; color: #f8fafc; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; }
-      h2, h3 { margin: 0 0 12px 0; font-size: 0.95rem; letter-spacing: 0.05em; text-transform: uppercase; color: #cbd5e1; border-bottom: 1px solid var(--glass-border); padding-bottom: 6px; }
+      h1 { margin: 0 0 16px 0; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.03em; color: #0f172a; border-bottom: 2px solid #2563eb; padding-bottom: 8px; }
+      h2, h3 { margin: 0 0 12px 0; font-size: 0.95rem; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; border-bottom: 1px solid var(--glass-border); padding-bottom: 6px; }
       
       /* Left Dock Styles - Made Scroll-Safe on laptops */
       #left-dock { 
@@ -54,11 +55,12 @@
         max-height: calc(100vh - 30px); 
       }
       #search-input {
-        width: 100%; padding: 10px; background: rgba(30, 41, 59, 0.5);
-        border: 1px solid var(--glass-border); color: white; border-radius: 6px; box-sizing: border-box;
+        width: 100%; padding: 10px; background: rgba(241, 245, 249, 0.8);
+        border: 1px solid #cbd5e1; color: var(--text-primary); border-radius: 6px; box-sizing: border-box;
       }
+      #search-input::placeholder { color: #94a3b8; }
       .filter-group { display: flex; flex-direction: column; gap: 8px; }
-      .filter-label { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; }
+      .filter-label { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: #334155; }
       
       /* Chart Sizing Optimization */
       .chart-container-small { height: 160px; position: relative; width: 100%; margin-top: 5px; }
@@ -77,13 +79,14 @@
       
       /* Summary Card Metrics Readouts */
       .metric-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; gap: 10px; }
-      .metric-value { font-weight: bold; color: #38bdf8; text-align: right; white-space: nowrap; }
+      .metric-value { font-weight: bold; color: #2563eb; text-align: right; white-space: nowrap; }
       
       /* Raycaster Tooltip Element */
       #tooltip {
-        position: absolute; top: -1000px; left: 0; background: rgba(15, 23, 42, 0.95);
-        padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; pointer-events: none;
-        max-width: 260px; z-index: 100; display: none; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+        position: absolute; top: -1000px; left: 0; background: rgba(255, 255, 255, 0.98);
+        padding: 12px; border-radius: 8px; border: 1px solid #2563eb; pointer-events: none;
+        max-width: 260px; z-index: 100; display: none; box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.3);
+        color: var(--text-primary);
       }
       #tooltip-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; line-height: 1.3; }
       #tooltip-concepts { font-size: 0.75rem; color: var(--text-muted); }
@@ -94,8 +97,9 @@
         background: var(--glass-bg); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         border: 1px solid var(--glass-border); padding: 12px 20px; border-radius: 8px;
         text-align: center; pointer-events: none; z-index: 15; opacity: 0; transition: opacity 0.2s ease;
+        box-shadow: 0 4px 20px 0 rgba(148, 163, 184, 0.1);
       }
-      #citation-text { font-size: 0.9rem; font-weight: 500; color: #e2e8f0; line-height: 1.4; }
+      #citation-text { font-size: 0.9rem; font-weight: 500; color: #334155; line-height: 1.4; }
     </style>
   </head>
   <body>

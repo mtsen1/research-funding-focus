@@ -1,6 +1,6 @@
 # R&D Landscape Explorer
 
-An interactive, high-dimensional data visualization platform designed to isolate, map, and analyze structural relationships between public and industry research funding. This platform features a network paired with real-time reactive 2D subplots to provide actionable resource-allocation intelligence for R&D stakeholders.
+An interactive, high-dimensional data visualization platform designed to isolate, map, and analyze structural relationships between public and industry research funding. This platform features a network paired with real-time reactive 2D subplots to provide actionable resource-allocation intelligence.
 
 Live Demo: [View Live Dashboard](https://mtsen1.github.io/research-funding-focus/)
 

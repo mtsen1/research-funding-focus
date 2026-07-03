@@ -1,33 +1,23 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-// --- 1. CORE THREE.JS SETUP ---
+// --- 1. CORE THREE.JS SETUP (NO EXTRA EFFECTS) ---
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2('#0f172a', 0.004);
+scene.background = new THREE.Color('#f8fafc'); // Match layout exactly
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 50, 150);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-
-const renderScene = new RenderPass(scene, camera);
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.4, 0.5, 0.1);
-
-const composer = new EffectComposer(renderer);
-composer.addPass(renderScene);
-composer.addPass(bloomPass);
 
 // --- 2. PIPELINE GLOBAL STATE ---
 let paperData = [];
@@ -43,14 +33,14 @@ scene.add(nexusLinesGroup);
 // Chart instances
 let chartSatiation, chartTimeline, chartImpact;
 
-// --- UPDATE JUST THIS OBJECT MAP IN YOUR main.js FILE ---
+// Okabe-Ito Colorblind-Safe Categorical Hex Definitions
 const funderColors = {
-  "public_nih": "#0072b2",          // Accessible Deep Blue
-  "public_nsf": "#56b4e9",          // Accessible Sky Blue
-  "industry_microsoft": "#009e73",  // Accessible Bluish Green
-  "industry_google": "#e69f00",     // Accessible Warm Orange
-  "industry_apple": "#f0e442",      // Accessible Soft Yellow
-  "industry_nvidia": "#cc79a7",     // Accessible Reddish Purple
+  "public_nih": "#0072b2",          // Deep Blue
+  "public_nsf": "#56b4e9",          // Sky Blue
+  "industry_microsoft": "#009e73",  // Bluish Green
+  "industry_google": "#e69f00",     // Warm Orange
+  "industry_apple": "#cc79a7",      // Reddish Purple
+  "industry_nvidia": "#d55e00",     // Vermillion
 };
 
 const funderLabels = {
@@ -62,7 +52,7 @@ const funderLabels = {
   "industry_nvidia": "Nvidia"
 };
 
-// --- 3. INIT CHART OBJECTS (WITH AXIS LABELS) ---
+// --- 3. INIT CHART OBJECTS ---
 function initCharts() {
   const chartOptions = {
     responsive: true,
@@ -73,17 +63,16 @@ function initCharts() {
     },
     scales: {
       x: { 
-        grid: { color: 'rgba(255,255,255,0.05)' }, 
-        ticks: { color: '#94a3b8', font: { size: 10 } } 
+        grid: { color: 'rgba(148, 163, 184, 0.15)' }, 
+        ticks: { color: '#475569', font: { size: 10 } } 
       },
       y: { 
-        grid: { color: 'rgba(255,255,255,0.05)' }, 
-        ticks: { color: '#94a3b8', font: { size: 10 } } 
+        grid: { color: 'rgba(148, 163, 184, 0.15)' }, 
+        ticks: { color: '#475569', font: { size: 10 } } 
       }
     }
   };
 
-  // Bar Chart: Topic Satiation vs Gaps
   chartSatiation = new Chart(document.getElementById('chart-bar-satiation'), {
     type: 'bar',
     data: { 
@@ -91,55 +80,41 @@ function initCharts() {
       datasets: [{ 
         label: 'Cumulative Citations', 
         data: [], 
-        backgroundColor: [], // Dynamically mapped by color engine
+        backgroundColor: [], 
         borderRadius: 4 
       }] 
     },
     options: {
       ...chartOptions,
       scales: {
-        x: { 
-          ...chartOptions.scales.x,
-          title: { display: true, text: 'Semantic Domains', color: '#64748b', font: { size: 10, weight: 'bold' } }
-        },
-        y: { 
-          ...chartOptions.scales.y,
-          title: { display: true, text: 'Total Citations', color: '#64748b', font: { size: 10, weight: 'bold' } }
-        }
+        x: { ...chartOptions.scales.x, title: { display: true, text: 'Semantic Domains', color: '#475569', font: { size: 10, weight: 'bold' } } },
+        y: { ...chartOptions.scales.y, title: { display: true, text: 'Total Citations', color: '#475569', font: { size: 10, weight: 'bold' } } }
       }
     }
   });
 
-  // Line Chart: Longitudinal Shift
   chartTimeline = new Chart(document.getElementById('chart-line-timeline'), {
     type: 'line',
     data: { labels: [], datasets: [] },
     options: {
       ...chartOptions,
-      plugins: { legend: { display: true, labels: { color: '#94a3b8', boxWidth: 10, font: { size: 9 } } } },
+      plugins: { legend: { display: true, labels: { color: '#475569', boxWidth: 10, font: { size: 9 } } } },
       elements: { line: { tension: 0.3, borderWidth: 2 }, point: { radius: 0 } },
       scales: {
-        x: { 
-          ...chartOptions.scales.x,
-          title: { display: true, text: 'Publication Timeline', color: '#64748b', font: { size: 10, weight: 'bold' } }
-        },
-        y: { 
-          ...chartOptions.scales.y,
-          title: { display: true, text: 'Paper Count', color: '#64748b', font: { size: 10, weight: 'bold' } }
-        }
+        x: { ...chartOptions.scales.x, title: { display: true, text: 'Publication Timeline', color: '#475569', font: { size: 10, weight: 'bold' } } },
+        y: { ...chartOptions.scales.y, title: { display: true, text: 'Paper Count', color: '#475569', font: { size: 10, weight: 'bold' } } }
       }
     }
   });
 
-  // Bubble Chart: Funder Return on Impact (ROI)
   chartImpact = new Chart(document.getElementById('chart-bubble-impact'), {
     type: 'bubble',
     data: { datasets: [] },
     options: {
       ...chartOptions,
       scales: {
-        x: { title: { display: true, text: 'Active Paper Volume', color: '#64748b', font: { size: 10, weight: 'bold' } }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
-        y: { title: { display: true, text: 'Mean Citation Yield', color: '#64748b', font: { size: 10, weight: 'bold' } }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+        x: { title: { display: true, text: 'Active Paper Volume', color: '#475569', font: { size: 10, weight: 'bold' } }, grid: { color: 'rgba(148, 163, 184, 0.15)' }, ticks: { color: '#475569' } },
+        y: { title: { display: true, text: 'Mean Citation Yield', color: '#475569', font: { size: 10, weight: 'bold' } }, grid: { color: 'rgba(148, 163, 184, 0.15)' }, ticks: { color: '#475569' } }
       }
     }
   });
@@ -154,8 +129,8 @@ fetch('./dashboard_ready.json')
     paperData = data;
     const count = data.length;
     
-    const geometry = new THREE.SphereGeometry(0.8, 16, 16);
-    const material = new THREE.MeshBasicMaterial();
+    const geometry = new THREE.SphereGeometry(1.2, 8, 8); // Slightly larger, simpler spheres
+    const material = new THREE.MeshBasicMaterial(); // Bare-bones rendering material (ignores lightning)
     instancedMesh = new THREE.InstancedMesh(geometry, material, count);
     
     const color = new THREE.Color();
@@ -170,7 +145,7 @@ fetch('./dashboard_ready.json')
       label.className = 'filter-label';
       label.innerHTML = `
         <input type="checkbox" checked class="child-box" data-funder="${funder}" />
-        <span style="color: ${funderColors[funder] || '#fff'}">●</span> ${funderLabels[funder] || funder}
+        <span style="color: ${funderColors[funder] || '#64748b'}">●</span> ${funderLabels[funder] || funder}
       `;
       
       label.querySelector('input').addEventListener('change', (e) => {
@@ -193,7 +168,7 @@ fetch('./dashboard_ready.json')
       dummy.updateMatrix();
       instancedMesh.setMatrixAt(i, dummy.matrix);
 
-      const hex = funderColors[paper.funder] || "#475569";
+      const hex = funderColors[paper.funder] || "#94a3b8";
       color.set(hex);
       instancedMesh.setColorAt(i, color);
       baseColors.push(hex);
@@ -226,7 +201,7 @@ function updateMeshAndMetricsPipeline() {
       dummy.scale.set(1, 1, 1);
       
       if (!searchMatch) {
-        color.set("#1e293b"); 
+        color.set("#e2e8f0"); // Hidden nodes fade to soft light gray background color
         instancedMesh.setColorAt(i, color);
       } else {
         color.set(baseColors[i]); 
@@ -251,7 +226,6 @@ function updateMeshAndMetricsPipeline() {
   recalculateMacroRelationships(visiblePapers);
 }
 
-// --- 6. 2D SUBPLOT ENGINE UPDATE MECHANISMS ---
 function updateHealthCard(visible, pubCount, indCount, totalCit) {
   document.getElementById('metric-volume').innerText = visible.length.toLocaleString();
   document.getElementById('metric-citations').innerText = visible.length ? Math.round(totalCit / visible.length).toLocaleString() : 0;
@@ -262,7 +236,6 @@ function updateHealthCard(visible, pubCount, indCount, totalCit) {
 }
 
 function calculateChartMetrics(visible) {
-  // --- A. BAR CHART AGGREGATION (WITH DYNAMIC COLOR ASSIGNMENT) ---
   let topicCitationMap = {};
   let topicFunderTracker = {}; 
 
@@ -282,7 +255,7 @@ function calculateChartMetrics(visible) {
     const topicName = t[0];
     const funderCounts = topicFunderTracker[topicName];
     const dominantFunder = Object.keys(funderCounts).reduce((a, b) => funderCounts[a] > funderCounts[b] ? a : b);
-    return funderColors[dominantFunder] || '#38bdf8';
+    return funderColors[dominantFunder] || '#2563eb';
   });
 
   chartSatiation.data.labels = sortedTopics.map(t => t[0].length > 18 ? t[0].substring(0,15)+'...' : t[0]);
@@ -290,7 +263,6 @@ function calculateChartMetrics(visible) {
   chartSatiation.data.datasets[0].backgroundColor = dynamicBarColors; 
   chartSatiation.update();
 
-  // --- B. LINE CHART AGGREGATION ---
   let timelineMap = {};
   let yearsSet = new Set();
   
@@ -309,13 +281,12 @@ function calculateChartMetrics(visible) {
     return {
       label: sector,
       data: sortedYears.map(y => timelineMap[sector][y] || 0),
-      borderColor: idx === 0 ? '#3b82f6' : '#10b981',
+      borderColor: idx === 0 ? '#0072b2' : '#009e73',
       backgroundColor: 'transparent'
     };
   });
   chartTimeline.update();
 
-  // --- C. BUBBLE CHART AGGREGATION ---
   let funderMap = {};
   visible.forEach(p => {
     if(!funderMap[p.funder]) funderMap[p.funder] = { volume: 0, citations: 0 };
@@ -328,13 +299,13 @@ function calculateChartMetrics(visible) {
     return {
       label: funderLabels[funder] || funder,
       data: [{ x: stats.volume, y: avgCit, r: Math.min(Math.max(stats.volume * 0.1, 4), 20) }],
-      backgroundColor: funderColors[funder] || '#fff'
+      backgroundColor: funderColors[funder] || '#64748b'
     };
   });
   chartImpact.update();
 }
 
-// --- 7. RELATIONSHIP STRATUM LINES ---
+// --- 6. RELATIONSHIP LINES ---
 function recalculateMacroRelationships(visible) {
   while(nexusLinesGroup.children.length > 0){ 
     nexusLinesGroup.remove(nexusLinesGroup.children[0]); 
@@ -362,17 +333,9 @@ function recalculateMacroRelationships(visible) {
     
     const centerVec = new THREE.Vector3(avgX, avgY, avgZ);
     activeHubs.push({ name: funder, pos: centerVec });
-
-    const waypointGeo = new THREE.BoxGeometry(1.8, 1.8, 1.8);
-    const waypointMat = new THREE.MeshBasicMaterial({ 
-      color: funderColors[funder], wireframe: true, transparent: true, opacity: 0.3 
-    });
-    const waypointMesh = new THREE.Mesh(waypointGeo, waypointMat);
-    waypointMesh.position.copy(centerVec);
-    nexusLinesGroup.add(waypointMesh);
   }
 
-  const lineMaterial = new THREE.LineBasicMaterial({ color: '#334155', transparent: true, opacity: 0.2 });
+  const lineMaterial = new THREE.LineBasicMaterial({ color: '#cbd5e1', transparent: true, opacity: 0.6 });
   for (let i = 0; i < activeHubs.length; i++) {
     for (let j = i + 1; j < activeHubs.length; j++) {
       const lineGeo = new THREE.BufferGeometry().setFromPoints([activeHubs[i].pos, activeHubs[j].pos]);
@@ -415,7 +378,7 @@ document.getElementById('search-input').addEventListener('input', (e) => {
   updateMeshAndMetricsPipeline();
 });
 
-// --- 8. RAYCASTER (HOVER INJECTION) ---
+// --- 7. RAYCASTER (HOVER DETECTION) ---
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const tooltip = document.getElementById('tooltip');
@@ -446,10 +409,10 @@ window.addEventListener('mousemove', (event) => {
       const pos = new THREE.Vector3().setFromMatrixPosition(matrix);
       if (pos.x === 0 && pos.y === 0 && pos.z === 0 && !activeFilters.has(paper.funder)) return;
 
-      const funderHex = funderColors[paper.funder] || '#94a3b8';
+      const funderHex = funderColors[paper.funder] || '#475569';
       tooltipTitle.innerHTML = `
-        <div style="margin-bottom: 4px;">${paper.title || "Unknown"}</div>
-        <div style="display: inline-block; padding: 1px 5px; font-size: 0.7rem; border-radius: 4px; background: rgba(15,23,42,0.6); border: 1px solid ${funderHex}; color: ${funderHex}; margin-bottom: 4px;">
+        <div style="margin-bottom: 4px; color: #0f172a;">${paper.title || "Unknown"}</div>
+        <div style="display: inline-block; padding: 1px 5px; font-size: 0.7rem; border-radius: 4px; background: rgba(241,245,249,0.9); border: 1px solid ${funderHex}; color: ${funderHex}; margin-bottom: 4px; font-weight: 600;">
           ${funderLabels[paper.funder] || paper.funder}
         </div>
       `;
@@ -458,7 +421,7 @@ window.addEventListener('mousemove', (event) => {
       
       const authorText = paper.author_citation && paper.author_citation !== "Unknown" ? `${paper.author_citation} ` : "";
       const doiText = paper.doi ? ` • DOI: ${paper.doi.replace('https://doi.org/', '')}` : '';
-      citationText.innerHTML = `<span style="color: #64748b;">${authorText}(${paper.year || "N/A"}).</span> “${paper.title}” <span style="color: #38bdf8;">${doiText}</span>`;
+      citationText.innerHTML = `<span style="color: #475569;">${authorText}(${paper.year || "N/A"}).</span> “${paper.title}” <span style="color: #2563eb; font-weight: 500;">${doiText}</span>`;
       citationFooter.style.opacity = '1';
     }
     tooltip.style.left = event.clientX + 12 + 'px';
@@ -470,19 +433,11 @@ window.addEventListener('mousemove', (event) => {
   }
 });
 
-// --- 9. ANIMATION RENDERING MATRIX ---
+// --- 8. ANIMATION LOOP ---
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
-  
-  nexusLinesGroup.children.forEach(child => {
-    if(child.isMesh) {
-      child.rotation.x += 0.004;
-      child.rotation.y += 0.004;
-    }
-  });
-
-  composer.render(); 
+  renderer.render(scene, camera); // Standard lightweight rendering
 }
 animate();
 
@@ -490,5 +445,4 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
 });
